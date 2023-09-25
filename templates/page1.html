@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Page 1</title>
+</head>
+<body>
+    <h1>Page 1</h1>
+    <form method="POST" action="{{ url_for('page1') }}">
+        <label for="name">Enter your name:</label>
+        <input type="text" name="name" id="name" required>
+        <br>
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>

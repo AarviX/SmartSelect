@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Page 2</title>
+</head>
+<body>
+    <h1>Page 2</h1>
+    {% if name %}
+    <p>Hello, {{ name }}!</p>
+    {% else %}
+    <p>Name not entered.</p>
+    {% endif %}
+    <a href="{{ url_for('homepage') }}">Back to Homepage</a>
+</body>
+</html>
