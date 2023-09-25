@@ -1,88 +1,93 @@
-import tkinter as tk
-from tkinter import messagebox
+import sys
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit
 
-class HomePage:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Homepage")
 
-        self.label = tk.Label(root, text="Welcome to the Homepage", font=("Helvetica", 16))
-        self.label.pack(pady=20)
+class HomePage(QWidget):
+    def __init__(self):
+        super().__init__()
 
-        self.button1 = tk.Button(root, text="Page 1", command=self.open_page1)
-        self.button1.pack()
+        self.layout = QVBoxLayout()
 
-        self.button2 = tk.Button(root, text="Page 2", command=self.open_page2)
-        self.button2.pack()
+        self.label = QLabel("Welcome to the Homepage")
+        self.layout.addWidget(self.label)
 
-        self.button3 = tk.Button(root, text="Page 3", command=self.open_page3)
-        self.button3.pack()
+        self.button1 = QPushButton("Page 1")
+        self.button1.clicked.connect(self.show_page1)
+        self.layout.addWidget(self.button1)
 
-    def open_page1(self):
-        page1 = Page1(self.root)
-        page1.show()
+        self.button2 = QPushButton("Page 2")
+        self.button2.clicked.connect(self.show_page2)
+        self.layout.addWidget(self.button2)
 
-    def open_page2(self):
-        page2 = Page2(self.root)
-        page2.show()
+        self.button3 = QPushButton("Page 3")
+        self.button3.clicked.connect(self.show_page3)
+        self.layout.addWidget(self.button3)
 
-    def open_page3(self):
-        page3 = Page3(self.root)
-        page3.show()
+        self.setLayout(self.layout)
 
-class Page1:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Page 1")
+    def show_page1(self):
+        self.page1 = Page1()
+        self.page1.show()
 
-        self.label = tk.Label(root, text="Page 1", font=("Helvetica", 16))
-        self.label.pack(pady=20)
+    def show_page2(self):
+        self.page2 = Page2()
+        self.page2.show()
 
-        self.name_label = tk.Label(root, text="Enter your name:")
-        self.name_label.pack()
+    def show_page3(self):
+        self.page3 = Page3()
+        self.page3.show()
 
-        self.name_entry = tk.Entry(root)
-        self.name_entry.pack()
 
-        self.submit_button = tk.Button(root, text="Submit", command=self.submit_name)
-        self.submit_button.pack()
+class Page1(QWidget):
+    def __init__(self):
+        super().__init__()
 
-    def submit_name(self):
-        name = self.name_entry.get()
+        self.layout = QVBoxLayout()
+
+        self.label = QLabel("Page 1")
+        self.layout.addWidget(self.label)
+
+        self.name_label = QLabel("Enter your name:")
+        self.layout.addWidget(self.name_label)
+
+        self.name_input = QLineEdit()
+        self.layout.addWidget(self.name_input)
+
+        self.setLayout(self.layout)
+
+
+class Page2(QWidget):
+    def __init__(self, name=""):
+        super().__init__()
+
+        self.layout = QVBoxLayout()
+
+        self.label = QLabel("Page 2")
+        self.layout.addWidget(self.label)
+
         if name:
-            self.root.destroy()
-            page2 = Page2(self.root, name)
-            page2.show()
+            self.name_label = QLabel(f"Hello, {name}!")
         else:
-            messagebox.showwarning("Warning", "Please enter your name.")
+            self.name_label = QLabel("Name not entered.")
+        self.layout.addWidget(self.name_label)
 
-class Page2:
-    def __init__(self, root, name=""):
-        self.root = root
-        self.root.title("Page 2")
+        self.setLayout(self.layout)
 
-        self.label = tk.Label(root, text="Page 2", font=("Helvetica", 16))
-        self.label.pack(pady=20)
 
-        if name:
-            greeting_label = tk.Label(root, text=f"Hello, {name}!")
-            greeting_label.pack()
-        else:
-            warning_label = tk.Label(root, text="Name not entered.")
-            warning_label.pack()
+class Page3(QWidget):
+    def __init__(self):
+        super().__init__()
 
-class Page3:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Page 3")
+        self.layout = QVBoxLayout()
 
-        self.label = tk.Label(root, text="Page 3", font=("Helvetica", 16))
-        self.label.pack(pady=20)
+        self.label = QLabel("Page 3")
+        self.layout.addWidget(self.label)
 
-def main():
-    root = tk.Tk()
-    app = HomePage(root)
-    root.mainloop()
+        self.setLayout(self.layout)
+
 
 if __name__ == "__main__":
-    main()
+    app = QApplication(sys.argv)
+    home_page = HomePage()
+    home_page.show()
+    sys.exit(app.exec_())
