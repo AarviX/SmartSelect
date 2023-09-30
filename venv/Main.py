@@ -1,7 +1,7 @@
 import os
 import shutil
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QPushButton, QLabel, QFileDialog, QGridLayout, QScrollArea
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QPushButton, QLabel, QFileDialog, QGridLayout, QScrollArea, QInputDialog, QMessageBox
 from PyQt5.QtGui import QPixmap, QImage
 from PIL import Image, ImageQt
 from PyQt5 import QtCore
@@ -12,6 +12,7 @@ class SmartSelect(QMainWindow):
         super().__init__()
         self.initui()
         self.photos = []  # List to store photo data
+        self.photo_grid_layout = QGridLayout()
     def initui(self):
         self.setWindowTitle('Smart Select Photo Album App')
         self.setGeometry(100, 100, 800, 600)
@@ -28,11 +29,14 @@ class SmartSelect(QMainWindow):
 
         logo_label = QLabel(self)
         logo_pixmap = QPixmap('/Users/srialla/SmartSelect/venv/Media/Entry.png')
-        max_logo_size = QSize(800,600)
-        logo_pixmap = logo_pixmap.scaled(max_logo_size, QtCore.Qt.KeepAspectRatio)
-        logo_label.setPixmap(logo_pixmap)
-        logo_label.setAlignment(QtCore.Qt.AlignCenter)
-        layout.addWidget(logo_label)
+        if logo_pixmap.isNull():
+            print("Error loading image")
+        else:
+            max_logo_size = QSize(800,600)
+            logo_pixmap = logo_pixmap.scaled(max_logo_size, QtCore.Qt.KeepAspectRatio)
+            logo_label.setPixmap(logo_pixmap)
+            logo_label.setAlignment(QtCore.Qt.AlignCenter)
+            layout.addWidget(logo_label)
 
         # self.photo_scroll_area = QScrollArea(self)
         # layout.addWidget(self.photo_scroll_area)
@@ -43,42 +47,74 @@ class SmartSelect(QMainWindow):
         # self.photo_grid_layout = QGridLayout(self.photo_scroll_content)
         # self.photo_grid_layout.setAlignment(QtCore.Qt.AlignTop)
 
-        upload_button = QPushButton('Design Album', self)
+        design_album_button = QPushButton('Design Album', self)
         help_button = QPushButton('Help', self)
         settings_button = QPushButton('Settings', self)
 
-        upload_button.clicked.connect(self.design_album)
+        design_album_button.clicked.connect(self.design_album)
         help_button.clicked.connect(self.help)
         settings_button.clicked.connect(self.settings)
 
-        layout.addWidget(upload_button)
+        layout.addWidget(design_album_button)
         layout.addWidget(help_button)
         layout.addWidget(settings_button)
+
     def design_album(self):
-       album_name, ok = QInputDialog.getText(self, 'Create Album', 'Enter album name:')
+        while True:
+            album_name, ok = QInputDialog.getText(self, 'Create Album', 'Enter album name:')
 
-       if ok and album_name:
-            album_dir = f'./{album_name}'  # You can change the directory path as needed
-            try:
-                os.makedirs(album_dir)
-                QMessageBox.information(self, 'Success', f'Album "{album_name}" created successfully!')
-            except OSError as e:
-                QMessageBox.critical(self, 'Error', f'Failed to create album directory: {str(e)}')
+            if not ok:
+                return  # User canceled
 
-            # Prompt the user to upload photos to the album directory
-            options = QFileDialog.Options()
-            options |= QFileDialog.ReadOnly
-            file_paths, _ = QFileDialog.getOpenFileNames(self, f'Upload Photos to {album_name}', '', 'Images (*.png *.jpg *.jpeg *.gif *.bmp);;All Files (*)', options=options)
+            if album_name:
+                album_dir = f'./{album_name}'  # You can change the directory path as needed
 
-            if file_paths:
-                for file_path in file_paths:
+                # Check if the directory already exists
+                if os.path.exists(album_dir):
+                    QMessageBox.warning(self, 'Album Name Exists', f'Album name "{album_name}" already exists. Please provide a unique name.')
+                else:
                     try:
-                        # Copy the selected photos to the album directory
-                        shutil.copy(file_path, album_dir)
-                    except Exception as e:
-                        print(f"Error copying file: {str(e)}")
-            else:
-                QMessageBox.information(self, 'Info', 'No photos selected for upload.')
+                        os.makedirs(album_dir)
+                        QMessageBox.information(self, 'Success', f'Album "{album_name}" created successfully!')
+                        break  # Exit the loop when a unique name is provided and directory is created
+                    except OSError as e:
+                        QMessageBox.critical(self, 'Error', f'Failed to create album directory: {str(e)}')
+
+        # Proceed to upload photos to the album directory
+        options = QFileDialog.Options()
+        options |= QFileDialog.ReadOnly
+        file_paths, _ = QFileDialog.getOpenFileNames(self, f'Upload Photos to {album_name}', '', 'Images (*.png *.jpg *.jpeg *.gif *.bmp);;All Files (*)', options=options)
+
+        if file_paths:
+            for file_path in file_paths:
+                try:
+                    shutil.copy(file_path, album_dir)
+                except Exception as e:
+                    print(f"Error copying file: {str(e)}")
+        else:
+            QMessageBox.information(self, 'Info', 'No photos selected for upload.')
+
+    def displayPhoto(self, photo_data):
+        try:
+            pixmap = QPixmap()
+            image = ImageQt.ImageQt(Image.open(io.BytesIO(photo_data)))
+            pixmap.convertFromImage(image)
+
+            # Create a QLabel to display the photo
+            label = QLabel(self)
+            label.setPixmap(pixmap)
+
+            # Create a small tile for the photo
+            tile = QWidget(self)
+            tile_layout = QVBoxLayout(tile)
+            tile_layout.addWidget(label)
+
+            # Add the tile to the grid layout
+            row, col = divmod(len(self.photos), 3)
+            self.photo_grid_layout.addWidget(tile, row, col)
+
+        except Exception as e:
+            print(f"Error displaying photo: {e}")
 
     def help(self):
         # Replace this with the code to open the Help page
@@ -126,16 +162,6 @@ class SmartSelect(QMainWindow):
         except Exception as e:
             print(f"Failed to compress the image: {e}")
             return None
-
-    def displayPhoto(self, photo_data):
-        pixmap = QPixmap()
-        image = ImageQt.ImageQt(Image.open(io.BytesIO(photo_data)))
-        pixmap.convertFromImage(image)
-        label = QLabel(self)
-        label.setPixmap(pixmap)
-
-        row, col = divmod(len(self.photos) - 1, 3)
-        self.photo_grid_layout.addWidget(label, row, col)
 
 def main():
     app = QApplication(sys.argv)
